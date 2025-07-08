@@ -239,7 +239,7 @@ curl -s <load_balancer_ dns_name>/languages | jq .
 curl -s <load_balancer_ dns_name>/languages | jq .
 ```
 Can be verified in browser
-```
+
 ![image](https://github.com/user-attachments/assets/34fc3da4-1e23-42ec-8431-5a403e37bca7)
 
 
