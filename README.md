@@ -280,6 +280,8 @@ Test the full end-to-end cloud native application
  Using your local workstation's browser - browse to the URL created in the previous output.
 
 After the voting application has loaded successfully, vote by clicking on several of the **+1** buttons, this will generate AJAX traffic which will be sent back to the API via the API's assigned ELB.
+
+
 ![image](https://github.com/user-attachments/assets/f7248486-73b1-4704-b767-d8a77b849348)
 
 
