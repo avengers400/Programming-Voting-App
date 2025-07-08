@@ -123,10 +123,11 @@ To create Mongo statefulset with Persistent volumes, run the command in manifest
 kubectl apply -f mongo-statefulset.yaml
 Check pods got deployed.
 kubectl get pods -n mongo
+```
 
 ![image](https://github.com/user-attachments/assets/ecf7989c-0ad5-446b-87c1-7504870d4f67)
 
-```
+
 
 Mongo Service
 ```
@@ -134,9 +135,11 @@ kubectl apply -f mongo-service.yaml
 Check whether service got deployed
 kubectl get svc -n mongo
 
+```
+
 ![image](https://github.com/user-attachments/assets/f5ad4e98-4372-4b94-a4d2-66cefc5e1bd0)
 
-```
+
 
 Create a temporary network utils pod. Enter into a bash session within it. In the terminal run the following command:
 ```
@@ -205,9 +208,11 @@ Create GO API deployment by running the following command:
 kubectl apply -f api-deployment.yaml
 kubectl get po -n api
 
+```
+
 ![image](https://github.com/user-attachments/assets/887fc72c-856a-4a63-b9f0-70dfaa022a47)
 
-```
+
 
 Expose API deployment through service using the following command:
 ```
@@ -234,9 +239,10 @@ curl -s <load_balancer_ dns_name>/languages | jq .
 curl -s <load_balancer_ dns_name>/languages | jq .
 ```
 Can be verified in browser
+```
 ![image](https://github.com/user-attachments/assets/34fc3da4-1e23-42ec-8431-5a403e37bca7)
 
-```
+
 
 
 If everything works fine, go ahead with Frontend setup.
@@ -248,9 +254,11 @@ Create the Frontend Deployment resource. In the terminal run the following c
 ```
 kubectl apply -f frontend-deployment.yaml
 kubectl get pods -n frontend
-![image](https://github.com/user-attachments/assets/a0d5ec62-08b9-4300-91d9-dc88ea209f74)
 
 ```
+![image](https://github.com/user-attachments/assets/a0d5ec62-08b9-4300-91d9-dc88ea209f74)
+
+
 
 Create a new Service resource of LoadBalancer type. In the terminal run the following command:
 ```
@@ -274,12 +282,13 @@ Generate the Frontend URL for browsing. In the terminal run the following comma
 ```
 echo http://$FRONTEND_ELB_PUBLIC_FQDN
 ```
-
+```
 Test the full end-to-end cloud native application
 
  Using your local workstation's browser - browse to the URL created in the previous output.
 
 After the voting application has loaded successfully, vote by clicking on several of the **+1** buttons, this will generate AJAX traffic which will be sent back to the API via the API's assigned ELB.
+```
 
 
 ![image](https://github.com/user-attachments/assets/f7248486-73b1-4704-b767-d8a77b849348)
