@@ -255,7 +255,7 @@ Create the Frontend Deployment resource. In the terminal run the following c
 kubectl apply -f frontend-deployment.yaml
 kubectl get pods -n frontend
 
-```
+
 ![image](https://github.com/user-attachments/assets/a0d5ec62-08b9-4300-91d9-dc88ea209f74)
 
 
