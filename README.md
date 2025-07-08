@@ -49,14 +49,7 @@ By working through this project, you'll develop a deeper understanding of cloud-
 
 ### **************************Steps to Deploy**************************
 
-Youtube Video to refer:
 
-[![Video Tutorial](https://img.youtube.com/vi/pTmIoKUeU-A/0.jpg)](https://youtu.be/pTmIoKUeU-A)
-
-Susbcribe:
-
-[https://www.youtube.com/@cloudchamp?
-](https://www.youtube.com/@cloudchamp?sub_confirmation=1)
 
 
 Create EKS cluster with NodeGroup (2 nodes of t2.medium instance type)
@@ -110,14 +103,16 @@ If using EC2 and getting the "You must be logged in to the server (Unauthorized)
 
 Clone the github repo
 ```
-git clone https://github.com/N4si/K8s-voting-app.git
+git clone https://github.com/avengers400/Programming-Voting-App.git
 ```
 
-**Create CloudChamp Namespace**
+**Create  Namespace for each section(frontend, api and mongo db)**
 ```
-kubectl create ns cloudchamp
+kubectl create ns mongo
+kunectl create ns api
+kubectl create ns frontend
 
-kubectl config set-context --current --namespace cloudchamp
+
 ```
 
 **MONGO Database Setup**
@@ -126,11 +121,21 @@ kubectl config set-context --current --namespace cloudchamp
 To create Mongo statefulset with Persistent volumes, run the command in manifests folder:
 ```
 kubectl apply -f mongo-statefulset.yaml
+Check pods got deployed.
+kubectl get pods -n mongo
+
+![image](https://github.com/user-attachments/assets/ecf7989c-0ad5-446b-87c1-7504870d4f67)
+
 ```
 
 Mongo Service
 ```
 kubectl apply -f mongo-service.yaml
+Check whether service got deployed
+kubectl get svc -n mongo
+
+![image](https://github.com/user-attachments/assets/f5ad4e98-4372-4b94-a4d2-66cefc5e1bd0)
+
 ```
 
 Create a temporary network utils pod. Enter into a bash session within it. In the terminal run the following command:
@@ -139,7 +144,7 @@ kubectl run --rm utils -it --image praqma/network-multitool -- bash
 ```
 Within the new utils pod shell, execute the following DNS queries:
 ```
-for i in {0..2}; do nslookup mongo-$i.mongo; done
+for i in {0..2}; do nslookup mongo-$i.mongo.mongo; done
 ```
 Note: This confirms that the DNS records have been created successfully and can be resolved within the cluster, 1 per MongoDB pod that exists behind the Headless Service - earlier created. 
 
@@ -153,12 +158,12 @@ On the `mongo-0` pod, initialise the Mongo database Replica set. In the termi
 cat << EOF | kubectl exec -it mongo-0 -- mongo
 rs.initiate();
 sleep(2000);
-rs.add("mongo-1.mongo:27017");
+rs.add("mongo-1.mongo.mongo:27017");
 sleep(2000);
-rs.add("mongo-2.mongo:27017");
+rs.add("mongo-2.mongo.mongo:27017");
 sleep(2000);
 cfg = rs.conf();
-cfg.members[0].host = "mongo-0.mongo:27017";
+cfg.members[0].host = "mongo-0.mongo.momgo:27017";
 rs.reconfig(cfg, {force: true});
 sleep(5000);
 EOF
@@ -169,13 +174,13 @@ Note: Wait until this command completes successfully, it typically takes 10-15 s
 
 To confirm run this in the terminal:
 ```
-kubectl exec -it mongo-0 -- mongo --eval "rs.status()" | grep "PRIMARY\|SECONDARY"
+kubectl -n mongo exec -it mongo-0 -- mongo --eval "rs.status()" | grep "PRIMARY\|SECONDARY"
 ```
 
 Load the Data in the database by running this command:
-## Note: use langdb not langdb() as shown in the video
+
 ```
-cat << EOF | kubectl exec -it mongo-0 -- mongo
+cat << EOF | kubectl -n mongo exec -it mongo-0 -- mongo
 use langdb;
 db.languages.insert({"name" : "csharp", "codedetail" : { "usecase" : "system, web, server-side", "rank" : 5, "compiled" : false, "homepage" : "https://dotnet.microsoft.com/learn/csharp", "download" : "https://dotnet.microsoft.com/download/", "votes" : 0}});
 db.languages.insert({"name" : "python", "codedetail" : { "usecase" : "system, web, server-side", "rank" : 3, "script" : false, "homepage" : "https://www.python.org/", "download" : "https://www.python.org/downloads/", "votes" : 0}});
@@ -190,7 +195,7 @@ EOF
 
 Create Mongo secret:
 ```
-kubectl apply -f mongo-secret.yaml
+kubectl -n api apply -f mongo-secret.yaml
 ```
 
 **API Setup**
@@ -198,54 +203,58 @@ kubectl apply -f mongo-secret.yaml
 Create GO API deployment by running the following command:
 ```
 kubectl apply -f api-deployment.yaml
+kubectl get po -n api
+
+![image](https://github.com/user-attachments/assets/887fc72c-856a-4a63-b9f0-70dfaa022a47)
+
 ```
 
 Expose API deployment through service using the following command:
 ```
-kubectl expose deploy api \
+kubectl -n api expose deploy api \
  --name=api \
  --type=LoadBalancer \
  --port=80 \
  --target-port=8080
 ```
+kubectl get svc -n api
 
-Next set the environment variable:
+![image](https://github.com/user-attachments/assets/fc9d70ef-a692-4e75-894d-b5e02bb375e8)
+![image](https://github.com/user-attachments/assets/5d6132a1-50ac-48ac-9497-e5373cb6e365)
 
-```
-{
-API_ELB_PUBLIC_FQDN=$(kubectl get svc api -ojsonpath="{.status.loadBalancer.ingress[0].hostname}")
-until nslookup $API_ELB_PUBLIC_FQDN >/dev/null 2>&1; do sleep 2 && echo waiting for DNS to propagate...; done
-curl $API_ELB_PUBLIC_FQDN/ok
-echo
-}
-```
+
+
+
 
 Test and confirm that the API route URL /languages, and /languages/{name} endpoints can be called successfully. In the terminal run any of the following commands:
 ```
-curl -s $API_ELB_PUBLIC_FQDN/languages | jq .
-curl -s $API_ELB_PUBLIC_FQDN/languages/go | jq .
-curl -s $API_ELB_PUBLIC_FQDN/languages/java | jq .
-curl -s $API_ELB_PUBLIC_FQDN/languages/nodejs | jq .
+curl -s <load_balancer_ dns_name>/languages | jq .
+curl -s <load_balancer_ dns_name>/languages | jq .
+curl -s <load_balancer_ dns_name>/languages | jq .
+curl -s <load_balancer_ dns_name>/languages | jq .
+```
+Can be verified in browser
+![image](https://github.com/user-attachments/assets/34fc3da4-1e23-42ec-8431-5a403e37bca7)
+
 ```
 
+
 If everything works fine, go ahead with Frontend setup.
-```
-{
-API_ELB_PUBLIC_FQDN=$(kubectl get svc api -ojsonpath="{.status.loadBalancer.ingress[0].hostname}")
-echo API_ELB_PUBLIC_FQDN=$API_ELB_PUBLIC_FQDN
-}
-```
+
 
 **Frontend setup**
 
 Create the Frontend Deployment resource. In the terminal run the following command:
 ```
 kubectl apply -f frontend-deployment.yaml
+kubectl get pods -n frontend
+![image](https://github.com/user-attachments/assets/a0d5ec62-08b9-4300-91d9-dc88ea209f74)
+
 ```
 
 Create a new Service resource of LoadBalancer type. In the terminal run the following command:
 ```
-kubectl expose deploy frontend \
+kubectl -n frontend expose deploy frontend \
  --name=frontend \
  --type=LoadBalancer \
  --port=80 \
@@ -271,11 +280,13 @@ Test the full end-to-end cloud native application
  Using your local workstation's browser - browse to the URL created in the previous output.
 
 After the voting application has loaded successfully, vote by clicking on several of the **+1** buttons, this will generate AJAX traffic which will be sent back to the API via the API's assigned ELB.
+![image](https://github.com/user-attachments/assets/f7248486-73b1-4704-b767-d8a77b849348)
+
 
 
 Query the MongoDB database directly to observe the updated vote data. In the terminal execute the following command:
 ```
-kubectl exec -it mongo-0 -- mongo langdb --eval "db.languages.find().pretty()"
+kubectl -n mongo exec -it mongo-0 -- mongo langdb --eval "db.languages.find().pretty()"
 ```
 
 ## **Summary**
